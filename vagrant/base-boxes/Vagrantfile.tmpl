@@ -1,0 +1,22 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "VBOX_BOX_NAME"
+
+  config.vm.define "vbhost" do |vbhost|
+    vbhost.vm.hostname = 'VBOX_HOSTNAME'
+  
+    vbhost.vm.provider :virtualbox do |vb|
+      vb.gui = false
+      vb.name = "VBOX_VM_NAME"
+      vb.customize ["modifyvm", :id, "--memory", "4096"]
+      vb.customize ["modifyvm", :id, "--hwvirtex", "on"]
+      vb.customize ["modifyvm", :id, "--cpus", "1"]
+    end
+  
+  end
+end
