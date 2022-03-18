@@ -3,9 +3,11 @@
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
+PRIVATE_KEY_BASE_PATH = Dir.home() + "/.ssh/" + "VBOX_PRIVATE_KEY"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "VBOX_BOX_NAME"
+  config.ssh.private_key_path = PRIVATE_KEY_BASE_PATH
 
   config.vm.define "vbhost" do |vbhost|
     vbhost.vm.hostname = 'VBOX_HOSTNAME'
