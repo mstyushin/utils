@@ -1,6 +1,14 @@
 #!/bin/bash
 
 SCRIPT_DIR=$( cd $( dirname ${BASH_SOURCE[0]}) && pwd )
+LIB_DIR="${SCRIPT_DIR}/../../lib/bash"
+
+if [[ -f ${LIB_DIR}/common.sh ]]; then
+  source ${LIB_DIR}/common.sh
+else
+  echo "Cannot find common lib, exiting"
+  exit 1
+fi
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
   sha_cmd="sha256sum"
@@ -28,11 +36,11 @@ EOF
 }
 
 generate_vagrantfile() {
-    echo -n "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Generating Vagrantfile..."
+    logme "INFO" "Generating Vagrantfile..."
     if [ -f ${SCRIPT_DIR}/Vagrantfile.tmpl ]; then
         local tmpl=${SCRIPT_DIR}/Vagrantfile.tmpl
     else
-        echo "$(date '+%Y-%m-%d %H:%M:%S') [FATAL] ${SCRIPT_DIR}/Vagrantfile.tmpl was not found"
+        logme "FATAL" "${SCRIPT_DIR}/Vagrantfile.tmpl was not found"
         exit 1
     fi
 
@@ -42,8 +50,9 @@ generate_vagrantfile() {
     eval $sed_cmd "s/VBOX_BOX_NAME/${VBOX_BOX_NAME}/g" ${vf}
     eval $sed_cmd "s/VBOX_HOSTNAME/${VBOX_HOSTNAME}/g" ${vf}
     eval $sed_cmd "s/VBOX_VM_NAME/${VBOX_VM_NAME}/g" ${vf}
+    eval $sed_cmd "s/VBOX_PRIVATE_KEY/${VBOX_PRIVATE_KEY}/g" ${vf}
 
-    echo "Done"
+    logme "INFO" "Vagrantfile has been created"
     return 0
 }
 
@@ -69,31 +78,43 @@ while [[ "$1" != "" ]]; do
 done
 
 if [[ -z BASEBOX_NAME ]]; then
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [FATAL] VM name wasn't specified, exiting"
+    logme "FATAL" "VM name wasn't specified, exiting"
     exit 1
 fi
 
 if [[ -z WORK_DIR ]]; then
     WORK_DIR=${SCRIPT_DIR}
-    echo "$(date '+%Y-%m-%d %H:%M:%S') [WARN] Working directory wasn't specified, use current directory: ${WORK_DIR}"
+    logme "WARN" "Working directory wasn't specified, use current directory: ${WORK_DIR}"
 fi
 
 VBOX_BOX_NAME=${BASEBOX_NAME}
 VBOX_HOSTNAME=vagrant
 VBOX_VM_NAME=${BASEBOX_NAME}
+VBOX_PRIVATE_KEY=id_rsa
 
 mkdir -p ${WORK_DIR}/${BASEBOX_NAME} && cd ${WORK_DIR}/${BASEBOX_NAME}
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Packaging ${BASEBOX_NAME} base box"
+logme "INFO" "Packaging ${BASEBOX_NAME} base box"
 date +%s > ${BASEBOX_NAME}.version
-echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Setting version $(cat ${BASEBOX_NAME}.version)"
+logme "INFO" "Setting version $(cat ${BASEBOX_NAME}.version)"
+
 vagrant package --base ${BASEBOX_NAME} --output ${BASEBOX_NAME}.box --include ${BASEBOX_NAME}.version
+if [[ $? -ne 0 ]]; then
+  logme "FATAL" "Error while packaging the VM"
+  if [[ -d ${WORK_DIR}/${BASEBOX_NAME} ]]; then
+    rm -rf ${WORK_DIR}/${BASEBOX_NAME}
+  fi
+  exit 1
+fi
+
 du -hs ${BASEBOX_NAME}.box
+
+logme "INFO" "Basebox is ready, calculating checksum"
 shasum -a 256 ${BASEBOX_NAME}.box > ${BASEBOX_NAME}.box.sha256
-echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] SHA256 is: $(cat ${BASEBOX_NAME}.box.sha256)"
+logme "INFO" "SHA256 is: $(cat ${BASEBOX_NAME}.box.sha256)"
 
 generate_vagrantfile
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') [INFO] Done"
+logme "INFO" "VM has been packaged, find the box file at ${WORK_DIR}/${BASEBOX_NAME}"
 
 exit 0
