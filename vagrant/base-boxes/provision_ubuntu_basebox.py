@@ -63,7 +63,8 @@ def install_guest_additions(c: Connection, version: str):
 
 def clean_up(c: Connection):
     logger.info('Cleaning up...')
-    c.sudo('apt clean all')
+    c.sudo('apt-get clean all')
+    c.sudo('poweroff')
 
 
 if __name__ == '__main__':
