@@ -131,9 +131,5 @@ dmypy.json
 # vim stuff
 *.ropeproject
 *.swp
-
-# intellij stuff
-.idea
-.idea/
-*.idea
-
+downloads
+*.mp4
