@@ -28,7 +28,7 @@ As of April 2022, there were some breaking updates of the YT and you may face er
 
         pytube.exceptions.RegexMatchError: get_throttling_function_name: could not find match for multiple
 
-There is no fixes yet in the pytube 12.0.0, so temporary you can patch the pytube package directly:
+There are no fixes yet in the pytube 12.0.0, so temporarily you can patch the pytube package directly:
 
 -  go to **cipher.py**
 
@@ -41,5 +41,5 @@ There is no fixes yet in the pytube 12.0.0, so temporary you can patch the pytub
 
         nfunc=re.escape(function_match.group(1))),
 
-Thanks Peter Guan from [SO](https://stackoverflow.com/questions/71907725/pytube-exceptions-regexmatcherror-get-throttling-function-name-could-not-find)
+Thanks to Peter Guan from [SO](https://stackoverflow.com/questions/71907725/pytube-exceptions-regexmatcherror-get-throttling-function-name-could-not-find)
 
