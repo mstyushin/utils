@@ -100,7 +100,7 @@ Fabric script for provisioning vagrant base box\r
         parser.add_argument('--guest-addition-version',
                             dest='guest_addition_version',
                             help='Numeric version of VBox guest additions package',
-                            default='6.1.32')
+                            default='7.0.6')
 
         args = parser.parse_args()
 
