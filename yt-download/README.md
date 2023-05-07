@@ -17,12 +17,14 @@ All videos (along with some meta info) will be downloaded to `./downloads`. Chan
 
 ##### Examples:
 
-        $ ./python yt-download.py --quality 720p --url https://www.youtube.com/playlist?list=bebebe
-        $ ./python yt-download.py --url https://www.youtube.com/playlist?list=blablabla
+        $ ./python yt-download.py --quality 720p --url https://www.youtube.com/playlist?list=bebebe --no-meta
+        $ ./python yt-download.py --url https://www.youtube.com/playlist?list=blablabla --meta
 
 ### Known issues
 
-##### could not find match for multiple
+All the issues above seem to be PyTube problems only. I think it's worth considering something more reliable.
+
+##### could not find match for multiple (fixed)
 
 As of April 2022, there were some breaking updates of the YT and you may face errors like
 
@@ -42,4 +44,15 @@ There are no fixes yet in the pytube 12.0.0, so temporarily you can patch the py
         nfunc=re.escape(function_match.group(1))),
 
 Thanks to Peter Guan from [SO](https://stackoverflow.com/questions/71907725/pytube-exceptions-regexmatcherror-get-throttling-function-name-could-not-find)
+
+##### KeyError: 'streamingData'
+
+On April 2023 authentication to YouTube seems to become mandatory. You'll be prompted to go to https://www.google.com/device with the provided code.
+Only then you'll be allowed to dowload video stream.
+
+Relevant links:
+
+-   https://github.com/pytube/pytube/issues/1609
+
+-   https://stackoverflow.com/questions/76129007/pytube-keyerror-streamdata-while-downloading-a-video
 
