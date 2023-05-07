@@ -25,14 +25,14 @@ def on_exception(ex):
 
 #@retry(wait_fixed=5000, retry_on_exception=on_exception)
 def download_youtube(url, mediafolder, mediafilename, quality):
-    video_stream = YouTube(url).streams.filter(subtype=VIDEO_TYPE, res=quality).first()
+    video_stream = YouTube(url, use_oauth=True, allow_oauth_cache=True).streams.filter(subtype=VIDEO_TYPE, res=quality).first()
     video_stream.download(mediafolder, mediafilename + '.' + VIDEO_TYPE)
 
 
 #@retry(wait_fixed=5000, retry_on_exception=on_exception)
 def grab_video_info(idx, video_url, downloader, quality, video_type=VIDEO_TYPE):
     try:
-        video = YouTube(video_url)
+        video = YouTube(video_url, use_oauth=True, allow_oauth_cache=True)
         video_stream = video.streams.filter(subtype=video_type, res=quality).first()
         log.info(f"Get information about {video_stream.title}")
         return ({
@@ -48,7 +48,15 @@ def grab_video_info(idx, video_url, downloader, quality, video_type=VIDEO_TYPE):
 
 
 def normalize(s: str):
-    return s.lower().replace('-', '_').replace(' ', '_').replace('.', '_').replace(',', '_')
+    rx = re.compile(r'_{2,}')
+    normalized = s.lower()\
+                .replace('-', '_')\
+                .replace(' ', '_')\
+                .replace('.', '_')\
+                .replace(',', '_')\
+                .replace("'", '')\
+                .replace('|', '')
+    return rx.sub('_', normalized)
 
 
 def grab_youtube_playlist(playlist_url, quality, start_from=0):
@@ -80,27 +88,37 @@ Download YouTube playlists easily!\r
                             required=True)
         parser.add_argument('--quality',
                             dest='quality',
-                            help='Preferred quality of video to download',
+                            help='Preferred quality of video to download. Default: 480p',
                             default='480p')
         parser.add_argument('--destination',
                             dest='destination',
-                            help='Path to the destination directory where to put dowloaded media',
+                            help='Path to the destination directory where to put dowloaded media. Default: ./downloads',
                             default='./downloads')
+        parser.add_argument('--meta',
+                            help='Whether to store metadata info.',
+                            action='store_true')
+        parser.add_argument('--no-meta',
+                            help='Whether to store metadata info.',
+                            dest='meta',
+                            action='store_false')
+        parser.set_defaults(meta=False)
 
         args = parser.parse_args()
         log.info(f'Downloading playlist {args.url}')
 
         for (meta, video, downloader) in grab_youtube_playlist(args.url, args.quality):
             dst_dir = os.path.abspath(args.destination)
-            metafile_path = os.path.join(dst_dir, meta['name']+".meta.json")
             if not os.path.isdir(dst_dir):
                 os.mkdir(dst_dir)
-            with open(metafile_path, "w") as metafile:
-                log.info(f"Store meta for {meta['name']}")
-                metafile.write(json.dumps(meta))
+            if args.meta:
+                metafile_path = os.path.join(dst_dir, meta['name']+".meta.json")
+                with open(metafile_path, "w") as metafile:
+                    log.info(f"Store meta for {meta['name']}")
+                    metafile.write(json.dumps(meta))
             log.info(f"Store media for {meta['name']}")
             if video:
                 downloader(video, dst_dir, meta['name'], args.quality)
+            time.sleep(1)
 
     except KeyboardInterrupt:
         print('Got SIGINT, terminating')
